@@ -42,12 +42,12 @@ export const Login = () => {
             if(!response.ok ) {
                 throw new Error(`HTTP error! status: ${response.status}`);              
             }
-            const userInfoData = await response.json();
-            const userInfoArray = userInfoData.map((data: { name: string, password: string }) => {
+            const datas = await response.json();
+            const userInfo = datas.map((data: { id: number, name: string, password: string }) => {
                 return (data.name+" "+data.password);
             });
-            if( userInfoArray.includes(userName+" "+userPassword) ) {
-                navigate("/userPortal");
+            if( userInfo.includes(userName+" "+userPassword) ) {
+                navigate("/userPortal", { state: { name: userName, password: userPassword } });
             }
             else if(userName === "" || userPassword === "") {
                         //do nothing

@@ -27,13 +27,13 @@ export const Signup = () => {
                 userName: userName, 
                 userPassword: userPassword
             };
-            const userInfoResponse = await fetch("http://localhost:5000/userInfo");
-            if(!userInfoResponse.ok ) {
-                throw new Error(`HTTP error! status: ${userInfoResponse.status}`);              
+            const response = await fetch("http://localhost:5000/userInfo");
+            if(!response.ok ) {
+                throw new Error(`HTTP error! status: ${response.status}`);              
             } 
-            const userInfoDatas = await userInfoResponse.json();     
-            const namesArray = userInfoDatas.map((data: { name: string }) => data.name);
-            if(namesArray.includes(userName)) {
+            const datas = await response.json();     
+            const userInfoNames = datas.map((data: { name: string }) => data.name);
+            if(userInfoNames.includes(userName)) {
                 toast.error('Username already exists!', { position: "top-center" });
             } else {
                 const response = await fetch("http://localhost:5000/signup",{

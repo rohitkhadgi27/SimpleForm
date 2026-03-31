@@ -1,30 +1,13 @@
-import { useState } from "react";
+import { useLocation } from 'react-router-dom';
 
 export const UserPortal = () => {
-
-    const [user, setUser] = useState('')
-
-    const jsonData = async () => {   
-        try {
-            const response = await fetch('https://jsonplaceholder.typicode.com/users');
-            const data = await response.json();
-            const userName = data.map((item: { username: string }) => item.username);
-            for(let un of userName) {
-                if(un == user) {
-                    console.log(un + " matches " + user);
-                }
-            }
-
-        } catch (error) {
-            console.log(error);
-        }      
-    }
+    const location = useLocation();
+    const  { name, password }  = location.state;
 
     return(
         <div>
-            Hello! User 
-            <input type="text" placeholder="Enter your name" onChange={(e) => setUser(e.target.value)}/>
-            <button onClick={jsonData}>Get Data</button>
+            <h2>Hello! {name} {password}</h2>
+            <p>Welcome to your Portal.</p>
         </div>
     );
 }
