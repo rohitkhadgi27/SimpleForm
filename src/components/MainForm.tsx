@@ -15,14 +15,6 @@ export const MainForm = () => {
   const [signupButtonClicked, setSignupButtonClicked] = useState(false);
   const [loginButtonClicked, setLoginButtonClicked] = useState(false);
 
-  // const buttonHandler = () => {
-  //   setButtonClicked(true);
-  // }
-
-  // useEffect(() => {
-  //   {buttonClicked && buttonSignupHandler()}
-  // }, [buttonClicked]); 
-
   const loginButtonHandler = () => {
     setLoginButtonClicked(true);
     setSignupButtonClicked(false);

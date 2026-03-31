@@ -32,7 +32,7 @@ export const Signup = () => {
                 throw new Error(`HTTP error! status: ${userInfoResponse.status}`);              
             } 
             const userInfoDatas = await userInfoResponse.json();     
-            const namesArray = userInfoDatas.map((data: { name: string }) => data.name );
+            const namesArray = userInfoDatas.map((data: { name: string }) => data.name);
             if(namesArray.includes(userName)) {
                 toast.error('Username already exists!', { position: "top-center" });
             } else {

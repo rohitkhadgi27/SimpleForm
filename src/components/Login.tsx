@@ -1,7 +1,6 @@
-import { set, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-//import { toast } from 'react-toastify';
+import { useEffect, useState } from 'react';
 
 type FormValues = {
     username: string,
@@ -25,6 +24,17 @@ export const Login = () => {
     const [userPassword, setUserPassword] = useState('');
     
     const[incorrectCredential, setIncorrectCredential] = useState(false);
+
+    const [loginButtonClicked, setLoginButtonClicked] = useState(false);
+
+    useEffect(() => {
+        { loginButtonClicked ? { handleLoginButton } : null };
+    },[loginButtonClicked]);
+
+    const loginButtonStateHandler = () => {
+        setLoginButtonClicked(true);
+    }
+ 
     const handleLoginButton = async () => {   
         setIncorrectCredential(false);
         try {
@@ -33,17 +43,16 @@ export const Login = () => {
                 throw new Error(`HTTP error! status: ${response.status}`);              
             }
             const userInfoData = await response.json();
-            const userInfoArray = userInfoData.map((data: { name: string, password: string }) => [data.name, data.password]); 
-            for(let [name, password] of userInfoArray) {
-                if(name === userName && password === userPassword) {
-                    navigate("/userPortal");
-                } 
+            const userInfoArray = userInfoData.map((data: { name: string, password: string }) => {
+                return (data.name+" "+data.password);
+            });
+            if( userInfoArray.includes(userName+" "+userPassword) ) {
+                navigate("/userPortal");
             }
-            if(userName === "" || userPassword === "") {
+            else if(userName === "" || userPassword === "") {
                         //do nothing
             }else {
                 setIncorrectCredential(true);
-                // toast.error('Incorrect username or password!', { toastId: "customToastId", position: "top-center" });
             }    
         } catch (error) {
             console.log(error);
@@ -51,7 +60,7 @@ export const Login = () => {
     }
 
     return(
-        <form className="login-color" onSubmit={ handleSubmit(handleLoginButton) } noValidate >
+        <form className="login-color" onSubmit={ handleSubmit(loginButtonStateHandler) } noValidate >
             <div className="form-control">
                 <h1>Login Form</h1>
                 <label htmlFor="username">Username</label>
