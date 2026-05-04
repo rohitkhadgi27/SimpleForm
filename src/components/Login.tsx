@@ -10,86 +10,71 @@ type FormValues = {
 export const Login = () => {
     const navigate = useNavigate();
 
-    const form = useForm<FormValues>({
-        defaultValues:{
-            username: "",
-            password: "",
-        }
-    }); 
-    
-    const { register, handleSubmit, formState } = form;
-    const { errors } = formState;
-    
-    const [userName, setUserName] = useState('');
-    const [userPassword, setUserPassword] = useState('');
-    
-    const[incorrectCredential, setIncorrectCredential] = useState(false);
+    const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
+
+    const [incorrectCredential, setIncorrectCredential] = useState(false);
 
     const [loginButtonClicked, setLoginButtonClicked] = useState(false);
 
     useEffect(() => {
         { loginButtonClicked ? { handleLoginButton } : null };
-    },[loginButtonClicked]);
+    }, [loginButtonClicked]);
 
-    const loginButtonStateHandler = () => {
+    const handleLoginButton = async (data: FormValues) => {
         setLoginButtonClicked(true);
-    }
- 
-    const handleLoginButton = async () => {   
         setIncorrectCredential(false);
         try {
-            const response = await fetch("http://localhost:5000/userInfo");
-            if(!response.ok ) {
-                throw new Error(`HTTP error! status: ${response.status}`);              
-            }
-            const datas = await response.json();
-            const userInfo = datas.map((data: { id: number, name: string, password: string }) => {
-                return (data.name+" "+data.password);
+            const response = await fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(data)
             });
-            if( userInfo.includes(userName+" "+userPassword) ) {
-                navigate("/userPortal", { state: { name: userName, password: userPassword } });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            else if(userName === "" || userPassword === "") {
-                        //do nothing
-            }else {
+            const userData = await response.json();
+            if (userData.name === data.username) {
+                navigate("/userPortal", { state: { user: userData } });
+            } else {
                 setIncorrectCredential(true);
-            }    
+            }
         } catch (error) {
             console.log(error);
         }
     }
 
-    return(
-        <form className="login-color" onSubmit={ handleSubmit(loginButtonStateHandler) } noValidate >
+    return (
+        <form className="login-color" onSubmit={handleSubmit(handleLoginButton)} noValidate >
             <div className="form-control">
                 <h1>Login Form</h1>
                 <label htmlFor="username">Username</label>
-                <input type="text" id="username" value={userName} 
+                <input type="text" id="username" 
                     {...register("username", {
                         required: {
                             value: true,
                             message: "username is required"
                         },
-                    })} 
-                onChange= {e => setUserName(e.target.value)}
+                    })}
+                    onChange={e => e.target.value}
                 />
                 <p className="error">{errors.username?.message}</p>
             </div>
 
             <div className="form-control">
                 <label htmlFor="password">Password</label>
-                <input type="password" id="password" value={userPassword}
+                <input type="password" id="password" 
                     {...register("password", {
                         required: {
                             value: true,
                             message: "password is required",
                         },
-                    })} 
-                onChange= {e => setUserPassword(e.target.value)}
+                    })}
+                    onChange={e => e.target.value}
                 />
                 <p className="error">{incorrectCredential ? "Incorrect username or password!" : errors.password?.message}</p>
-            </div>        
-            <button onClick={ handleLoginButton }>Login</button>    
+            </div>
+            <button type="submit">Login</button>
         </form>
-    );    
+    );
 }
