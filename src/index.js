@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy } from 'passport-local';
+import GoogleStrategy from 'passport-google-oauth20';
 import env from 'dotenv';
 
 const app = express();
@@ -40,9 +41,9 @@ const db = new Pool({
 });
 
 // Passport Local Strategy for authentication
-passport.use(new Strategy(async (username, password, cb) => {
+passport.use(new Strategy({ usernameField: 'email' }, async (email, password, cb) => {
   try {
-    const result = await db.query("SELECT * FROM users WHERE name = $1", [username]);
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
     if (result.rows.length === 0) {
       return cb(null, false);
     }
@@ -58,53 +59,45 @@ passport.use(new Strategy(async (username, password, cb) => {
   }
 }));
 
-// putting data in the session(it's a good practice to store only the user id in the session, not the entire user object for security reasons)
-passport.serializeUser((user, cb) => {
-  return cb(null, user.id);
-});
-
-// retrieving the user data from the session
-passport.deserializeUser(async (id, cb) => {
+//  Passport Google OAuth Strategy for authentication
+passport.use("google", new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:5000/auth/google/secrets",
+  userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+}, async (accessToken, refreshToken, profile, cb) => {
   try {
-    const result = await db.query("SELECT * FROM users WHERE id = $1", [id]);
-    return cb(null, result.rows[0]);
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [profile.emails[0].value]);
+    if (result.rows.length === 0) {
+      const newUser = await db.query("INSERT INTO users (email, password) VALUES($1, $2) RETURNING *", [profile.emails[0].value, "google"]);
+      return cb(null, newUser);
+    } else {
+      return cb(null, result.rows[0]);
+    }
   } catch (err) {
     return cb(err);
   }
-});
-// Hashing the password and storing the user info in the database
-app.post('/signup', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    //Password Hashing using bcrypt
-    bcrypt.hash(password, saltRounds, async (err, hash) => {
-      if (err) {
-        console.log("Error hashing password:", err);
-      } else {
-        const userInfo = await db.query(
-          "INSERT INTO users (name, password) VALUES($1, $2) RETURNING *",
-          [username, hash]
-        );
-        res.send(userInfo.rows);
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
-});
-// Authenticating the user using passport local strategy and creating a session for the authenticated user
-app.post('/login', (req, res, next) => {
-  passport.authenticate("local", (err, user) => {
-    if (err) return next(err);
-    if (!user) return res.send({ name: "Incorrect username or password!" });
-    req.logIn(user, err => {
-      if (err) return next(err);
-      return res.send(user);
-    });
-  })(req, res, next);
+}));
+
+// putting data in the session
+passport.serializeUser((user, cb) => {
+  return cb(null, user);
 });
 
-// Getting the user info from the database and sending it to the frontend
+// retrieving the user data from the session
+passport.deserializeUser((user, cb) => {
+  return cb(null, user);
+});
+
+//********************GET ROUTES ************************************************************ */
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+app.get('/auth/google/secrets', passport.authenticate('google',
+  {
+    successRedirect: 'http://localhost:5173/userPortal',
+    failureRedirect: 'http://localhost:5173'
+  }));
+
+  // Getting the user info from the database and sending it to the frontend
 app.get('/userInfo', async (req, res) => {
   try {
     const response = await db.query("SELECT * FROM users");
@@ -122,6 +115,50 @@ app.get("/secret", (req, res) => {
   res.send({ loggedIn: false });
 });
 
+app.get('/logout', (req, res) => {
+  req.logout(err => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send("logout");
+    }
+  });
+});
+
+//********************POST ROUTES ************************************************************ */
+
+// Hashing the password and storing the user info in the database
+app.post('/signup', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    //Password Hashing using bcrypt
+    bcrypt.hash(password, saltRounds, async (err, hash) => {
+      if (err) {
+        console.log("Error hashing password:", err);
+      } else {
+        const userInfo = await db.query(
+          "INSERT INTO users (email, password) VALUES($1, $2) RETURNING *",
+          [email, hash]
+        );
+        res.send(userInfo.rows);
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+// Authenticating the user using passport local strategy and creating a session for the authenticated user
+app.post('/login', (req, res, next) => {
+  passport.authenticate("local", (err, user) => {
+    if (err) return next(err);
+    if (!user) return res.send({ name: "Incorrect username or password!" });
+    req.logIn(user, err => {
+      if (err) return next(err);
+      return res.send(user);
+    });
+  })(req, res, next);
+});
 
 app.listen(5000, () => {
   console.log(`Server running on http://localhost:5000`);

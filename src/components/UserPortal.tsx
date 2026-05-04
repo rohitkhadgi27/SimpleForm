@@ -36,14 +36,35 @@ export const UserPortal = () => {
         fetchUser();
     }, []);
 
+    const handleLogout = async () => {
+        try {
+            const response = await fetch("http://localhost:5000/logout", { 
+                method: "GET",
+                credentials: "include"
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const userData = await response.text();
+            if (userData === "logout") {
+                navigate("/");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     if (loading) {
         return <h2>Loading...</h2>;
     }
 
     return (
         <div>
-            <h1>Hello! {user.name}</h1>
+            <h1>Hello! {user.email.split('@')[0]}</h1>
             <h2>Welcome to your Portal.</h2>
+            <button type="button" className="login-color" onClick={handleLogout}>
+                Logout
+            </button>
         </div>
     );
 };

@@ -1,50 +1,42 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
+import { IconButton } from 'rsuite';
+import { FcGoogle } from "react-icons/fc";
 
 type FormValues = {
     username: string,
+    email: string,
     password: string
 };
 
 export const Signup = () => {
-    const form = useForm<FormValues>({
-        defaultValues: {
-            username: "",
-            password: "",
-        }
-    });
-    const { register, handleSubmit, formState } = form;
-    const { errors } = formState;
+    const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
 
-    const [userName, setUserName] = useState('');
+    const [userEmail, setUserEmail] = useState('');
     const [userPassword, setUserPassword] = useState('');
-
-    const signupSubmitButtonHandler = async () => {
+     
+    const signupSubmitButtonHandler = async (data: FormValues) => {
         try {
-            const body = {
-                username: userName,
-                password: userPassword
-            };
             const response = await fetch("http://localhost:5000/userInfo");
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const datas = await response.json();
-            const userInfoNames = datas.map((data: { name: string }) => data.name);
-            if (userInfoNames.includes(userName)) {
-                toast.error('Username already exists!', { position: "top-center" });
+            const users = await response.json();
+            const userInfoEmails = users.map((user: { email: string }) => user.email);
+            if (userInfoEmails.includes(data.email)) {
+                toast.error('Email already exists!', { position: "top-center" });
             } else {
                 const response = await fetch("http://localhost:5000/signup", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify(data)
                 });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 toast.success('Form submitted successfully!', { position: "top-center" });
-                setUserName('');
+                setUserEmail('');
                 setUserPassword('');
             }
         } catch (error) {
@@ -56,8 +48,8 @@ export const Signup = () => {
     return (
         <div>
             <form className="signup-color" onSubmit={handleSubmit(signupSubmitButtonHandler)} noValidate >
-                <div className="form-control">
-                    <h1>Signup Form</h1>
+                <h1>Signup Form</h1>
+                {/* <div className="form-control">
                     <label htmlFor="username">Username</label>
                     <input type="text" id="username" value={userName}
                         {...register("username", {
@@ -78,6 +70,21 @@ export const Signup = () => {
                         onChange={e => setUserName(e.target.value)}
                     />
                     <p className="error">{errors.username?.message}</p>
+                </div> */}
+
+                <div className="form-control">
+                    <label htmlFor="email">Email</label>
+                    <input type="text" id="email" value={userEmail}
+                        {...register("email", {
+                            required: "Email is required",
+                            pattern: {
+                                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                message: 'Invalid email address',
+                            },
+                        })}
+                        onChange={e => setUserEmail(e.target.value)}
+                    />
+                    <p className="error">{errors.email?.message}</p>
                 </div>
 
                 <div className="form-control">
@@ -103,19 +110,18 @@ export const Signup = () => {
                     <p className="error">{errors.password?.message}</p>
                 </div>
                 <button>Submit</button>
+                <a href="http://localhost:5000/auth/google">
+                    <IconButton
+                        type="button"
+                        icon={
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <FcGoogle size={20} />
+                                <span>Sign Up with Google</span>
+                            </div>
+                        }
+                    />
+                </a>
             </form>
         </div>
     );
 }
-
-//const effectRan = useRef(false);
-//const [submitButtonClicked, setSubmitButtonClicked] = useState(false);
-// useEffect(() => {
-//     if(effectRan.current === false){
-//         { setSubmitButtonClicked(true) }
-//         { submitButtonClicked ? { signupSubmitButtonHandler } : null };
-//         return () => {
-//             effectRan.current = true;
-//         }
-//     }
-// },[submitButtonClicked]);
