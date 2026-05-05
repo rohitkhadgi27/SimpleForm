@@ -7,10 +7,15 @@ import passport from 'passport';
 import { Strategy } from 'passport-local';
 import GoogleStrategy from 'passport-google-oauth20';
 import env from 'dotenv';
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 const saltRounds = 10; // Number of salt rounds for bcrypt hashing
-env.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+env.config({ path: path.join(__dirname, "../.env") });
 
 //*****************Middleware setup************************************************
 app.use(cors({
