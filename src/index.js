@@ -102,7 +102,7 @@ app.get('/auth/google/secrets', passport.authenticate('google',
     failureRedirect: 'http://localhost:5173'
   }));
 
-  // Getting the user info from the database and sending it to the frontend
+// Getting the user info from the database and sending it to the frontend
 app.get('/userInfo', async (req, res) => {
   try {
     const response = await db.query("SELECT * FROM users");
@@ -113,13 +113,16 @@ app.get('/userInfo', async (req, res) => {
 });
 
 // A protected route that checks if the user is authenticated from the session before sending the user info
-app.get("/secret", (req, res) => {
+app.get("/secret", async (req, res) => {
   if (req.isAuthenticated()) {
-    return res.send({ loggedIn: true, user: req.user });
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [req.user.email]);
+    return res.send({ loggedIn: true, user: req.user, secret: result.rows[0].secret });
   }
   res.send({ loggedIn: false });
 });
 
+
+// A route to Log out
 app.get('/logout', (req, res) => {
   req.logout(err => {
     if (err) {
@@ -165,6 +168,15 @@ app.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
+app.post('/secretText', async (req, res) => {
+  const { user, secretText } = req.body;
+  const result = await db.query(
+    "UPDATE users SET secret = $1 WHERE email = $2 RETURNING secret", [secretText, user.email]
+  );
+  res.send(result.rows[0]);
+});
+
+//*****************localhost server************************************
 app.listen(5000, () => {
   console.log(`Server running on http://localhost:5000`);
 });

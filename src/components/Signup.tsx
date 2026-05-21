@@ -15,7 +15,7 @@ export const Signup = () => {
 
     const [userEmail, setUserEmail] = useState('');
     const [userPassword, setUserPassword] = useState('');
-     
+
     const signupSubmitButtonHandler = async (data: FormValues) => {
         try {
             const response = await fetch("http://localhost:5000/userInfo");

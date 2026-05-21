@@ -74,8 +74,28 @@ button.login-color {
   background-color: #dbe3fe
 }
 
+button.logout-color {
+  background-color: #ffbca3
+}
+
 button.signup-color {
   background-color: #e3f0e8
+}
+
+button.secret-color {
+  background-color: #090909c6;
+  color: #fff;
+}
+
+.center-input {
+  display: flex;
+  justify-content: center;
+  margin: 10px;
+}
+
+.secret-text {
+  width: 100%;
+  max-width: 250px;
 }
 
 @media (prefers-color-scheme: light) {

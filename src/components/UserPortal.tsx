@@ -1,12 +1,17 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 
 export const UserPortal = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const [user, setUser] = useState(location.state?.user || null);
     const [loading, setLoading] = useState(true);
+
+    const [secretText, setSecretText] = useState(user?.secret || "");
 
     useEffect(() => {
         // If user already exists from navigation, no need to fetch
@@ -23,6 +28,7 @@ export const UserPortal = () => {
                 const data = await res.json();
                 if (data.loggedIn) {
                     setUser(data.user);
+                    setSecretText(data.secret);
                 } else {
                     navigate("/");
                 }
@@ -36,9 +42,30 @@ export const UserPortal = () => {
         fetchUser();
     }, []);
 
+    const handleSecretText = async () => {
+        const body = {
+            user: user,
+            secretText: inputRef.current?.value ?? ""
+        }
+        try {
+            const response = await fetch("http://localhost:5000/secretText", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            setSecretText(data.secret);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const handleLogout = async () => {
         try {
-            const response = await fetch("http://localhost:5000/logout", { 
+            const response = await fetch("http://localhost:5000/logout", {
                 method: "GET",
                 credentials: "include"
             });
@@ -62,9 +89,18 @@ export const UserPortal = () => {
         <div>
             <h1>Hello! {user.email.split('@')[0]}</h1>
             <h2>Welcome to your Portal.</h2>
-            <button type="button" className="login-color" onClick={handleLogout}>
-                Logout
-            </button>
+            <p><b>Your Secret Text : </b>{secretText}</p>
+            <div className="center-input">
+                <input type="text" className="secret-text" ref={inputRef}  placeholder="Type your secret text here" />
+            </div>
+            <div className="div">
+                <button type="button" className="secret-color" onClick={handleSecretText} >
+                    Submit
+                </button>
+                <button type="button" className="logout-color" onClick={handleLogout}>
+                    Logout
+                </button>
+            </div>
         </div>
     );
 };
