@@ -41,7 +41,7 @@ app.use(passport.session());
 // Database connection pool setup
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? {rejectUnauthorized: false} : false,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
   // user: process.env.PG_USER,
   // host: process.env.PG_HOST,
   // database: process.env.PG_DATABASE,
@@ -103,8 +103,9 @@ passport.deserializeUser((user, cb) => {
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 app.get('/auth/google/secrets', passport.authenticate('google',
   {
-    successRedirect: 'http://localhost:5173/userPortal',
-    failureRedirect: 'http://localhost:5173'
+    successRedirect: process.env.FRONTEND_URL + '/userPortal',
+    failureRedirect: process.env.FRONTEND_URL
+
   }));
 
 // Getting the user info from the database and sending it to the frontend
