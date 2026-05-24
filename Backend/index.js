@@ -80,7 +80,7 @@ passport.use("google", new GoogleStrategy({
     const result = await db.query("SELECT * FROM users WHERE email = $1", [profile.emails[0].value]);
     if (result.rows.length === 0) {
       const newUser = await db.query("INSERT INTO users (email, password) VALUES($1, $2) RETURNING *", [profile.emails[0].value, "google"]);
-      return cb(null, newUser);
+      return cb(null, newUser.rows[0]);
     } else {
       return cb(null, result.rows[0]);
     }
