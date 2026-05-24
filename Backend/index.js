@@ -15,7 +15,7 @@ const saltRounds = 10; // Number of salt rounds for bcrypt hashing
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-env.config({ path: path.join(__dirname, ".env") });
+env.config();
 
 //*****************Middleware setup************************************************
 app.use(cors({
