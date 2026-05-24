@@ -19,7 +19,7 @@ env.config({ path: path.join(__dirname, ".env") });
 
 //*****************Middleware setup************************************************
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: process.env.FRONTEND_URL,
   credentials: true
 }));
 app.use(express.json());
@@ -29,6 +29,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 1000 * 60 * 60 * 24, // 1 day
   },
 }));
@@ -71,7 +73,7 @@ passport.use(new Strategy({ usernameField: 'email' }, async (email, password, cb
 passport.use("google", new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "http://localhost:5000/auth/google/secrets",
+  callbackURL: process.env.GOOGLE_CALLBACK_URL,
   userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
 }, async (accessToken, refreshToken, profile, cb) => {
   try {
@@ -180,7 +182,6 @@ app.post('/secretText', async (req, res) => {
 });
 
 //*****************localhost server************************************
-app.listen(5000, () => {
-  console.log(`Server running on http://localhost:5000`);
-});
-
+// Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
