@@ -11,6 +11,7 @@ type FormValues = {
 };
 
 export const Signup = () => {
+    const API = import.meta.env.VITE_API_URL;
     const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
 
     const [userEmail, setUserEmail] = useState('');
@@ -18,7 +19,7 @@ export const Signup = () => {
 
     const signupSubmitButtonHandler = async (data: FormValues) => {
         try {
-            const response = await fetch("http://localhost:5000/userInfo");
+            const response = await fetch(`${API}/userInfo`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -27,7 +28,7 @@ export const Signup = () => {
             if (userInfoEmails.includes(data.email)) {
                 toast.error('Email already exists!', { position: "top-center" });
             } else {
-                const response = await fetch("http://localhost:5000/signup", {
+                const response = await fetch(`${API}/signup`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data)
@@ -110,7 +111,7 @@ export const Signup = () => {
                     <p className="error">{errors.password?.message}</p>
                 </div>
                 <button>Submit</button>
-                <a href="http://localhost:5000/auth/google">
+                <a href={`${API}/auth/google`}>
                     <IconButton
                         type="button"
                         icon={

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 
 export const UserPortal = () => {
+    const API = import.meta.env.VITE_API_URL;
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -22,7 +23,7 @@ export const UserPortal = () => {
         // Otherwise, check session
         const fetchUser = async () => {
             try {
-                const res = await fetch("http://localhost:5000/secret", {
+                const res = await fetch(`${API}/secret`, {
                     credentials: "include"
                 });
                 const data = await res.json();
@@ -48,7 +49,7 @@ export const UserPortal = () => {
             secretText: inputRef.current?.value ?? ""
         }
         try {
-            const response = await fetch("http://localhost:5000/secretText", {
+            const response = await fetch(`${API}/secretText`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
@@ -65,7 +66,7 @@ export const UserPortal = () => {
 
     const handleLogout = async () => {
         try {
-            const response = await fetch("http://localhost:5000/logout", {
+            const response = await fetch(`${API}/logout`, {
                 method: "GET",
                 credentials: "include"
             });

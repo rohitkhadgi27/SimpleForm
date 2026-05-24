@@ -10,6 +10,7 @@ type FormValues = {
 };
 
 export const Login = () => {
+    const API = import.meta.env.VITE_API_URL;
     const navigate = useNavigate();
 
     const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
@@ -18,7 +19,7 @@ export const Login = () => {
 
     const handleLoginButton = async (data: FormValues) => {
         try {
-            const response = await fetch("http://localhost:5000/login", {
+            const response = await fetch(`${API}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -74,7 +75,7 @@ export const Login = () => {
                 <p className="error">Incorrect credentials!</p>
             )}
             <button type="submit">Login</button>
-            <a href="http://localhost:5000/auth/google">
+            <a href={`${import.meta.env.VITE_API_URL}/auth/google`}>
                 <IconButton
                     type="button"
                     icon={
