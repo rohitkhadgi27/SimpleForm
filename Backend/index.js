@@ -15,7 +15,7 @@ const saltRounds = 10; // Number of salt rounds for bcrypt hashing
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-env.config({ path: path.join(__dirname, ".env") });
+env.config();
 
 //*****************Middleware setup************************************************
 app.use(cors({
@@ -47,7 +47,6 @@ const db = new Pool({
   // database: process.env.PG_DATABASE,
   // password: process.env.PG_PASSWORD,
   // port: process.env.PG_PORT,
-
 });
 
 // Passport Local Strategy for authentication
@@ -91,13 +90,24 @@ passport.use("google", new GoogleStrategy({
 
 // putting data in the session
 passport.serializeUser((user, cb) => {
-  return cb(null, user);
+  cb(null, user.email);   // store only email
 });
+// passport.serializeUser((user, cb) => {
+//   return cb(null, user);
+// });
 
 // retrieving the user data from the session
-passport.deserializeUser((user, cb) => {
-  return cb(null, user);
+passport.deserializeUser(async (email, cb) => {
+  try {
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+    cb(null, result.rows[0]);
+  } catch (err) {
+    cb(err);
+  }
 });
+// passport.deserializeUser((user, cb) => {
+//   return cb(null, user);
+// });
 
 //********************GET ROUTES ************************************************************ */
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
