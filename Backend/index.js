@@ -23,7 +23,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.set("trust proxy", 1);
+// app.set("trust proxy", 1);
 
 //session should be initialized before passport.session() middleware
 app.use(session({
@@ -31,7 +31,6 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    // httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 1000 * 60 * 60 * 24, // 1 day
