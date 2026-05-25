@@ -23,6 +23,8 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.set("trust proxy", 1);
+
 //session should be initialized before passport.session() middleware
 app.use(session({
   secret: process.env.SESSION_SECRET, // Use an environment variable for the session secret
