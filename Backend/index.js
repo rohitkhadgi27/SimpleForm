@@ -111,12 +111,20 @@ passport.deserializeUser(async (email, cb) => {
 
 //********************GET ROUTES ************************************************************ */
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/auth/google/secrets', passport.authenticate('google',
-  {
-    successRedirect: process.env.FRONTEND_URL + '/userPortal',
-    failureRedirect: process.env.FRONTEND_URL
+// app.get('/auth/google/secrets', passport.authenticate('google',
+//   {
+//     successRedirect: process.env.FRONTEND_URL + '/userPortal',
+//     failureRedirect: process.env.FRONTEND_URL
 
-  }));
+//   }));
+app.get(
+  "/auth/google/secrets",
+  passport.authenticate("google", { failureRedirect: process.env.FRONTEND_URL }),
+  (req, res) => {
+    res.redirect(process.env.FRONTEND_URL + "/userPortal");
+  }
+);
+
 
 // Getting the user info from the database and sending it to the frontend
 app.get('/userInfo', async (req, res) => {
