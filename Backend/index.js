@@ -23,7 +23,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-// app.set("trust proxy", 1);
+app.set("trust proxy", 1);
 
 //session should be initialized before passport.session() middleware
 app.use(session({
