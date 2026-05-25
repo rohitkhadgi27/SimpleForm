@@ -92,25 +92,25 @@ passport.use("google", new GoogleStrategy({
 }));
 
 // putting data in the session
-passport.serializeUser((user, cb) => {
-  cb(null, user.email);   // store only email
-});
 // passport.serializeUser((user, cb) => {
-//   return cb(null, user);
+//   cb(null, user.email);   // store only email
 // });
+passport.serializeUser((user, cb) => {
+  return cb(null, user);
+});
 
 // retrieving the user data from the session
-passport.deserializeUser(async (email, cb) => {
-  try {
-    const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-    cb(null, result.rows[0]);
-  } catch (err) {
-    cb(err);
-  }
-});
-// passport.deserializeUser((user, cb) => {
-//   return cb(null, user);
+// passport.deserializeUser(async (email, cb) => {
+//   try {
+//     const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+//     cb(null, result.rows[0]);
+//   } catch (err) {
+//     cb(err);
+//   }
 // });
+passport.deserializeUser((user, cb) => {
+  return cb(null, user);
+});
 
 //********************GET ROUTES ************************************************************ */
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
