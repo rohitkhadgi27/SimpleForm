@@ -107,7 +107,7 @@ passport.deserializeUser(async (email, cb) => {
   } catch (err) {
     cb(err);
   }
-// });
+});
 // passport.deserializeUser((user, cb) => {
 //   return cb(null, user);
 // });
