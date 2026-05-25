@@ -94,7 +94,7 @@ passport.use("google", new GoogleStrategy({
 // putting data in the session
 passport.serializeUser((user, cb) => {
   cb(null, user.email);   // store only email
-// });
+});
 // passport.serializeUser((user, cb) => {
 //   return cb(null, user);
 // });
