@@ -74,18 +74,19 @@ export const Login = () => {
             {incorrectCredential && (
                 <p className="error">Incorrect credentials!</p>
             )}
-            <button type="submit">Login</button>
-            <a href={`${import.meta.env.VITE_API_URL}/auth/google`}>
-                <IconButton
-                    type="button"
-                    icon={
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <FcGoogle size={20} />
-                            <span>Login with Google</span>
-                        </div>
-                    }
-                />
-            </a>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px" }}>
+                <button type="submit" className="login-btn">Login</button>
+                <a href={`${import.meta.env.VITE_API_URL}/auth/google`}>
+                    <IconButton type="button" 
+                        icon={
+                            <div style={{ display: "flex",alignItems: "center", gap: "8px", marginTop: -3, marginBottom: 3 }}>
+                                <FcGoogle size={20} />
+                                <span>Login with Google</span>
+                            </div>
+                        }
+                    />
+                </a>
+            </div>
         </form>
     );
 }

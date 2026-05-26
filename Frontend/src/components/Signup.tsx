@@ -1,8 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { IconButton } from 'rsuite';
-import { FcGoogle } from "react-icons/fc";
 
 type FormValues = {
     username: string,
@@ -50,29 +48,6 @@ export const Signup = () => {
         <div>
             <form className="signup-color" onSubmit={handleSubmit(signupSubmitButtonHandler)} noValidate >
                 <h1>Signup Form</h1>
-                {/* <div className="form-control">
-                    <label htmlFor="username">Username</label>
-                    <input type="text" id="username" value={userName}
-                        {...register("username", {
-                            required: "Username is required",
-                            pattern: {
-                                value: /^[a-zA-Z0-9]+$/,
-                                message: 'Username cannot contain special characters or spaces',
-                            },
-                            minLength: {
-                                value: 3,
-                                message: "Username must be at least 3 characters"
-                            },
-                            maxLength: {
-                                value: 15,
-                                message: "Username must not be more than 15 characters"
-                            },
-                        })}
-                        onChange={e => setUserName(e.target.value)}
-                    />
-                    <p className="error">{errors.username?.message}</p>
-                </div> */}
-
                 <div className="form-control">
                     <label htmlFor="email">Email</label>
                     <input type="text" id="email" value={userEmail}
@@ -111,17 +86,6 @@ export const Signup = () => {
                     <p className="error">{errors.password?.message}</p>
                 </div>
                 <button>Submit</button>
-                <a href={`${API}/auth/google`}>
-                    <IconButton
-                        type="button"
-                        icon={
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <FcGoogle size={20} />
-                                <span>Sign Up with Google</span>
-                            </div>
-                        }
-                    />
-                </a>
             </form>
         </div>
     );
