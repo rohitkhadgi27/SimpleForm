@@ -30,7 +30,7 @@ export const Login = () => {
             }
             const userData = await response.json();
 
-            if (userData.email === data.email) {
+            if (userData.email === data.email.toLowerCase()) {
                 navigate("/userPortal", { state: { user: userData } });
             } else {
                 setIncorrectCredential(true);
@@ -70,6 +70,9 @@ export const Login = () => {
                     onChange={() => setIncorrectCredential(false)}
                 />
                 <p className="error">{errors.password?.message}</p>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <a href="/forgot-password" style={{ fontSize: "14px" }}>Forgot password?</a>
+                </div>
             </div>
             {incorrectCredential && (
                 <p className="error">Incorrect credentials!</p>
@@ -77,9 +80,9 @@ export const Login = () => {
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px" }}>
                 <button type="submit" className="login-btn">Login</button>
                 <a href={`${import.meta.env.VITE_API_URL}/auth/google`}>
-                    <IconButton type="button" 
+                    <IconButton type="button"
                         icon={
-                            <div style={{ display: "flex",alignItems: "center", gap: "8px", marginTop: -3, marginBottom: 3 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: -3, marginBottom: 3 }}>
                                 <FcGoogle size={20} />
                                 <span>Login with Google</span>
                             </div>

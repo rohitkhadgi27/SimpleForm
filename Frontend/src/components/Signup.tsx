@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 type FormValues = {
-    username: string,
     email: string,
+    recoveryEmail: string,
     password: string
 };
 
@@ -14,6 +14,7 @@ export const Signup = () => {
 
     const [userEmail, setUserEmail] = useState('');
     const [userPassword, setUserPassword] = useState('');
+    const [recoveryEmail, setRecoveryEmail] = useState('');
 
     const signupSubmitButtonHandler = async (data: FormValues) => {
         try {
@@ -37,6 +38,7 @@ export const Signup = () => {
                 toast.success('Form submitted successfully!', { position: "top-center" });
                 setUserEmail('');
                 setUserPassword('');
+                setRecoveryEmail('');
             }
         } catch (error) {
             toast.error('There was an error submitting the form.');
@@ -84,6 +86,20 @@ export const Signup = () => {
                         onChange={e => setUserPassword(e.target.value)}
                     />
                     <p className="error">{errors.password?.message}</p>
+                </div>
+                <div className="form-control">
+                    <label htmlFor="recoveryEmail">Recovery Email</label>
+                    <input type="text" id="recoveryEmail" value={recoveryEmail}
+                        {...register("recoveryEmail", {
+                            required: "Recovery email is required",
+                            pattern: {
+                                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                message: 'Invalid email address',
+                            },
+                        })}
+                        onChange={e => setRecoveryEmail(e.target.value)}
+                    />
+                    <p className="error">{errors.recoveryEmail?.message}</p>
                 </div>
                 <button>Submit</button>
             </form>

@@ -44,7 +44,17 @@ form.login-color {
   background-color: #dbe3fe;
 }
 
+form.reset-color {
+  border: 2px blur #1a1a1a;
+  box-shadow: 0px 4px 12px rgba(26, 26, 26, 0.4);
+  background-color: rgba(251, 252, 251, 0.967);
+}  
+
 form.signup-color {
+  background-color: #e3f0e8;
+}
+
+form.update-color {
   background-color: #e3f0e8;
 }
 
@@ -85,6 +95,23 @@ button.signup-color {
 button.secret-color {
   background-color: #090909c6;
   color: #fff;
+}
+
+button.reset-btn {
+  background-color: #dbe3fe;      /* dark button */
+  color: rgb(12, 12, 12);                   /* text color */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  margin-top: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+button.update-btn {
+  background-color: #397150;      /* lighter button on hover */
+  color: rgb(242, 228, 228);                   /* text color remains the same */
 }
 
 .center-input {
