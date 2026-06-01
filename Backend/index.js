@@ -1,3 +1,5 @@
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 import express from 'express';
 import cors from 'cors';
 import { Pool } from "pg";
@@ -23,7 +25,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.set("trust proxy", 1);
+app.set("trust proxy", 1); // Couldn't login with google with it
 
 //session should be initialized before passport.session() middleware
 app.use(session({
@@ -51,10 +53,19 @@ const db = new Pool({
   // port: process.env.PG_PORT,
 });
 
+//Nodemailer to send emails directly from your backend server
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
 // Passport Local Strategy for authentication
 passport.use(new Strategy({ usernameField: 'email' }, async (email, password, cb) => {
   try {
-    const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
     if (result.rows.length === 0) {
       return cb(null, false);
     }
@@ -80,7 +91,8 @@ passport.use("google", new GoogleStrategy({
   try {
     const result = await db.query("SELECT * FROM users WHERE email = $1", [profile.emails[0].value]);
     if (result.rows.length === 0) {
-      const newUser = await db.query("INSERT INTO users (email, password) VALUES($1, $2) RETURNING *", [profile.emails[0].value, "google"]);
+      const newUser = await db.query("INSERT INTO users (email, password, recovery_email) VALUES($1, $2, $3) RETURNING *",
+        [profile.emails[0].value.toLowerCase(), "google", profile.emails[0].value.toLowerCase()]);
       return cb(null, newUser.rows[0]);
     } else {
       return cb(null, result.rows[0]);
@@ -92,24 +104,18 @@ passport.use("google", new GoogleStrategy({
 
 // putting data in the session
 passport.serializeUser((user, cb) => {
-  cb(null, user.email);   // store only email
+  cb(null, user.email.toLowerCase());   // store only email
 });
-// passport.serializeUser((user, cb) => {
-//   return cb(null, user);
-// });
 
 // retrieving the user data from the session
 passport.deserializeUser(async (email, cb) => {
   try {
-    const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
     cb(null, result.rows[0]);
   } catch (err) {
     cb(err);
   }
 });
-// passport.deserializeUser((user, cb) => {
-//   return cb(null, user);
-// });
 
 //********************GET ROUTES ************************************************************ */
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -133,7 +139,7 @@ app.get('/userInfo', async (req, res) => {
 // A protected route that checks if the user is authenticated from the session before sending the user info
 app.get("/secret", async (req, res) => {
   if (req.isAuthenticated()) {
-    const result = await db.query("SELECT * FROM users WHERE email = $1", [req.user.email]);
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [req.user.email.toLowerCase()]);
     return res.send({ loggedIn: true, user: req.user, secret: result.rows[0].secret });
   }
   res.send({ loggedIn: false });
@@ -156,15 +162,15 @@ app.get('/logout', (req, res) => {
 // Hashing the password and storing the user info in the database
 app.post('/signup', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, recoveryEmail } = req.body;
     //Password Hashing using bcrypt
     bcrypt.hash(password, saltRounds, async (err, hash) => {
       if (err) {
         console.log("Error hashing password:", err);
       } else {
         const userInfo = await db.query(
-          "INSERT INTO users (email, password) VALUES($1, $2) RETURNING *",
-          [email, hash]
+          "INSERT INTO users (email, password, recovery_email) VALUES($1, $2, $3) RETURNING *",
+          [email.toLowerCase(), hash, recoveryEmail.toLowerCase()]
         );
         res.send(userInfo.rows);
       }
@@ -189,10 +195,89 @@ app.post('/login', (req, res, next) => {
 app.post('/secretText', async (req, res) => {
   const { user, secretText } = req.body;
   const result = await db.query(
-    "UPDATE users SET secret = $1 WHERE email = $2 RETURNING secret", [secretText, user.email]
+    "UPDATE users SET secret = $1 WHERE email = $2 RETURNING secret", [secretText, user.email.toLowerCase()]
   );
   res.send(result.rows[0]);
 });
+
+
+//***********Reset Password**********************************
+app.post("/reset-password", async (req, res) => {
+  const { email, recoveryEmail } = req.body;
+
+  try {
+    // 1. Check if user exists
+    const result = await db.query(
+      "SELECT * FROM users WHERE email = $1 AND recovery_email = $2",
+      [email.toLowerCase(), recoveryEmail.toLowerCase()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send({ message: "Email and recovery email do not match" });
+    }
+
+    // 2. Generate token + expiry
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = Date.now() + 1000 * 60 * 15; // (1000 millisec is 1second * 60 seconds * 15) = 15 minutes
+
+    await db.query(
+      "UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE email = $3 AND recovery_email = $4",
+      [token, expiry, email.toLowerCase(), recoveryEmail.toLowerCase()]
+    );
+
+    // 3. Create reset link
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+
+    // 4. Send email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: recoveryEmail.toLowerCase(),
+      subject: "Password Reset",
+      html: `
+        <p>You requested a password reset.</p>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetLink}">${resetLink}</a>
+      `,
+    });
+
+    // 5. Respond to frontend
+    res.send({ message: "Reset link sent to your recovery email" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.post("/update-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const result = await db.query(
+      "SELECT * FROM users WHERE reset_token = $1 AND reset_token_expiry > $2",
+      [token, Date.now()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid or expired token" });
+    }
+
+    const email = result.rows[0].email;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.query(
+      "UPDATE users SET password = $1, reset_token = NULL, reset_token_expiry = NULL WHERE email = $2",
+      [hashedPassword, email.toLowerCase()]
+    );
+
+    res.send({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("UPDATE ERROR:", err);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
 
 //*****************localhost server************************************
 // Server
